@@ -9,4 +9,31 @@ export class CategoryService {
   async getCategories(): Promise<CategoryItemModel[]> {
     return this.prisma.categoryItem.findMany();
   }
+
+  async createCategory(name: string): Promise<CategoryItemModel> {
+    return this.prisma.categoryItem.create({
+      data: {
+        name,
+      },
+    });
+  }
+
+  async deleteCategory(id: string): Promise<CategoryItemModel> {
+    return this.prisma.categoryItem.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async updateCategory(id: string, name: string): Promise<CategoryItemModel> {
+    return this.prisma.categoryItem.update({
+      where: {
+        id,
+      },
+      data: {
+        name,
+      },
+    });
+  }
 }
