@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { mastra } from './mastra';
+import { mastra } from '../mastra';
 
 @Injectable()
 export class AppService {
   async getHello(): Promise<string> {
-    const agent = mastra.getAgent('weatherAgent');
+    const agent = mastra.getAgent('expenseAgent');
     let res = '';
     try {
       const result = await agent.generate(
