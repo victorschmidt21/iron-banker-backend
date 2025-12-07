@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CategoryItemModel } from 'generated/prisma/models/CategoryItem';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CategoryEntity } from './entities/category.entity';
+import { CurrentUserDto } from 'src/auth/dto/current-user.dto';
 
 @Injectable()
 export class CategoryService {
@@ -14,10 +15,13 @@ export class CategoryService {
 
   async createCategory(
     createCategoryDto: CreateCategoryDto,
+    user: CurrentUserDto,
   ): Promise<CategoryEntity> {
-    
     return this.prisma.categoryItem.create({
-      data: createCategoryDto,
+      data: {
+        name: createCategoryDto.name,
+        userId: user.userId,
+      },
     });
   }
 

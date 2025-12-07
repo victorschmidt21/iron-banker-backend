@@ -11,6 +11,7 @@ import {
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 
 @Controller('category')
 export class CategoryController {
@@ -24,8 +25,11 @@ export class CategoryController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createCategory(@Body() createCategoryDto: CreateCategoryDto) {
-    return await this.categoryService.createCategory(createCategoryDto);
+  async createCategory(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @CurrentUser() user,
+  ) {
+    return await this.categoryService.createCategory(createCategoryDto, user);
   }
 
   @Delete(':id')
