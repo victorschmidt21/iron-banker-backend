@@ -14,8 +14,24 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String  
+  password  String
+  phone     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expenses  Expense[]
+  categoryItems CategoryItem[]
+
+  @@map("users")
+}
+
 model Expense {
   id               String    @id @default(uuid())
+  user             User      @relation(fields: [userId], references: [id])
+  userId           String
   items            Items[]
   priceTotal      Float
   paymentMethod   PaymentMethod
@@ -27,6 +43,8 @@ model Expense {
 
 model CategoryItem{
   id        String  @id @default(uuid())
+  user             User      @relation(fields: [userId], references: [id])
+  userId           String
   name      String  @unique
   items     Items[]
   createdAt DateTime         @default(now())
