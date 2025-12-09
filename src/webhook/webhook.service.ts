@@ -1,9 +1,10 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { ReceivedMessageEvolutionDto } from './dto/receivedMessageEvolution.dto';
+import {
+  messageType,
+  ReceivedMessageEvolutionDto,
+} from './dto/receivedMessageEvolution.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ExpenseAgent } from 'src/mastra/agents/expense-agent';
-import z from 'zod';
-import { PaymentMethod } from 'generated/prisma/enums';
 import { EvolutionApiIntegration } from 'src/integrations/evolution-api';
 
 @Injectable()
@@ -13,10 +14,6 @@ export class WebhookService {
   async receivedMessageEvolution(
     receivedeMessage: ReceivedMessageEvolutionDto,
   ) {
-    const expenseAgent = new ExpenseAgent();
-    const evolutionApi = new EvolutionApiIntegration();
-    const message = receivedeMessage.data.message.conversation;
-
     const phone = receivedeMessage.data.key.remoteJid.replace(
       '@s.whatsapp.net',
       '',
@@ -33,6 +30,32 @@ export class WebhookService {
 
     if (!user) {
       throw new HttpException('User not found', 404);
+    }
+
+    const expenseAgent = new ExpenseAgent();
+    const evolutionApi = new EvolutionApiIntegration();
+    let message = '';
+
+    switch (receivedeMessage.data.messageType) {
+      case messageType.conversation: {
+        message = receivedeMessage.data.message.conversation!;
+        console.log('coversation');
+        break;
+      }
+
+      case messageType.audioMessage: {
+        const response = await evolutionApi.AudioRoute.download(
+          receivedeMessage.data.key.id,
+        );
+        console.log(response);
+        console.log('audio');
+        break;
+      }
+
+      default: {
+        console.log('nada');
+        break;
+      }
     }
 
     const categories = await this.prisma.categoryItem.findMany({
