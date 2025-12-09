@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@mastra/core": "^0.24.6",
+    "@mastra/voice-deepgram": "^0.11.13",
+    "@mastra/voice-elevenlabs": "^0.11.12",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",

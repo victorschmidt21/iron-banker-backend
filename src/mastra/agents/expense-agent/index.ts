@@ -2,11 +2,13 @@ import { Agent } from '@mastra/core/agent';
 import z from 'zod';
 import { PaymentMethod } from 'generated/prisma/enums';
 import { instructions } from './instructions';
+import { DeepgramVoice } from '@mastra/voice-deepgram';
 
 export class ExpenseAgent {
   agent: Agent;
 
   constructor() {
+    const voice = new DeepgramVoice();
     this.agent = new Agent({
       name: 'Expense Agent',
       instructions: instructions,

@@ -6,6 +6,8 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ExpenseAgent } from 'src/mastra/agents/expense-agent';
 import { EvolutionApiIntegration } from 'src/integrations/evolution-api';
+import { VoiceDeepgram } from 'src/mastra/voice/deepgram';
+import { Readable } from 'stream';
 
 @Injectable()
 export class WebhookService {
@@ -44,11 +46,21 @@ export class WebhookService {
       }
 
       case messageType.audioMessage: {
+        const voice = new VoiceDeepgram();
+
         const response = await evolutionApi.AudioRoute.download(
           receivedeMessage.data.key.id,
         );
-        console.log(response);
-        console.log('audio');
+
+        const rawBase64 = response.base64.replace(/^data:.*?base64,/, '');
+
+        const buffer = Buffer.from(rawBase64, 'base64');
+
+        const audioStream = Readable.from(buffer);
+
+        const transcribe = await voice.transcript(audioStream);
+
+        message = transcribe;
         break;
       }
 
