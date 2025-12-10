@@ -50,5 +50,5 @@ jobs:
               -e EVOLUTION_INSTANCE_ID="${{ secrets.EVOLUTION_INSTANCE_ID }}" \
               -e EVOLUTION_API_KEY="${{ secrets.EVOLUTION_API_KEY }}" \
               -e EVOLUTION_API_URL="${{ secrets.EVOLUTION_API_URL }}" \
-              -e EVOLUTION_API_WEBHOOK_KEY="${{ secrets.EVOLUTION_API_WEBHOOK_KEY }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/iron-banker-backend:latest
