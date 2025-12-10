@@ -9,12 +9,7 @@ export class WebhookController {
   @Post('received-message-evolution')
   async receivedMessageEvolution(
     @Body() receivedMessageEvolution: ReceivedMessageEvolutionDto,
-    @Headers('x-apy-key') apykey: string,
   ): Promise<any> {
-    if (apykey !== process.env.EVOLUTION_API_WEBHOOK_KEY || !apykey) {
-      throw new HttpException('Unauthorized', 404);
-    }
-
     return this.webhookService.receivedMessageEvolution(
       receivedMessageEvolution,
     );
