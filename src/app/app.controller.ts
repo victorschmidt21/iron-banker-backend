@@ -46,18 +46,10 @@ export class AppController {
   //   return result.object;
   // }
 
-  @Post()
-  async getHello(@Body() body): Promise<string> {
-    const evo = new EvolutionApiIntegration();
+  @Get()
+  async getHello(): Promise<string> {
+    
 
-    const data: MessageSendRequest = {
-      text: 'Hello from Evolution API',
-
-      number: '5545999658439',
-    };
-
-    const response = await evo.MessageRoute.sendMessage(data);
-
-    return response;
+    return "Hello Word";
   }
 }

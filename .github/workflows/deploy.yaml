@@ -1,0 +1,57 @@
+name: Deploy NestJS App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 3. Build da imagem Docker
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/iron-banker-backend:latest .
+
+      # 4. Enviar para Docker Hub
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/iron-banker-backend:latest
+
+      # 5. Deploy na VPS via SSH
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/iron-banker-backend:latest
+
+
+            docker stop ${{ secrets.CONTAINER_NAME }} || true
+            docker rm ${{ secrets.CONTAINER_NAME }} || true
+
+
+            docker run -d \
+              --name ${{ secrets.CONTAINER_NAME }} \
+              -p 5252:5252 \
+              -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+              -e DEEPGRAM_API_KEY="${{ secrets.DEEPGRAM_API_KEY }}" \
+              -e ELEVENLABS_API_KEY="${{ secrets.ELEVENLABS_API_KEY }}" \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+              -e EVOLUTION_INSTANCE_ID="${{ secrets.EVOLUTION_INSTANCE_ID }}" \
+              -e EVOLUTION_API_KEY="${{ secrets.EVOLUTION_API_KEY }}" \
+              -e EVOLUTION_API_URL="${{ secrets.EVOLUTION_API_URL }}" \
+              -e EVOLUTION_API_WEBHOOK_KEY="${{ secrets.EVOLUTION_API_WEBHOOK_KEY }}" \
+              ${{ secrets.DOCKERHUB_USERNAME }}/iron-banker-backend:latest
