@@ -8,6 +8,7 @@ import { ExpenseAgent } from 'src/mastra/agents/expense-agent';
 import { EvolutionApiIntegration } from 'src/integrations/evolution-api';
 import { VoiceDeepgram } from 'src/mastra/voice/deepgram';
 import { Readable } from 'stream';
+import { DeciderAgent } from 'src/mastra/agents/decider-agent';
 
 @Injectable()
 export class WebhookService {
@@ -34,14 +35,12 @@ export class WebhookService {
       throw new HttpException('User not found', 404);
     }
 
-    const expenseAgent = new ExpenseAgent();
     const evolutionApi = new EvolutionApiIntegration();
     let message = '';
 
     switch (receivedeMessage.data.messageType) {
       case messageType.conversation: {
         message = receivedeMessage.data.message.conversation!;
-        console.log('coversation');
         break;
       }
 
@@ -70,52 +69,68 @@ export class WebhookService {
       }
     }
 
-    const categories = await this.prisma.categoryItem.findMany({
-      where: {
-        userId: user.id,
-      },
-      select: {
-        name: true,
-        id: true,
-      },
-    });
+    const deciderAgent = new DeciderAgent();
 
-    const result = await expenseAgent.receivedMessage(
-      message,
-      categories.map((cat) => cat.name),
-    );
+    const type = (await deciderAgent.getTypeMessage(message)).object;
 
-    await evolutionApi.MessageRoute.sendMessage({
-      text: result.object.resumeWhatsapp,
-      number: phone,
-      options: {
-        delay: 5,
-      },
-    });
+    switch (type.type) {
+      case 'expense': {
+        const categories = await this.prisma.categoryItem.findMany({
+          where: {
+            userId: user.id,
+          },
+          select: {
+            name: true,
+            id: true,
+          },
+        });
 
-    const expense = await this.prisma.expense.create({
-      data: {
-        userId: user.id,
-        priceTotal: result.object.priceTotal,
-        paymentMethod: result.object.paymentMethod,
-      },
-      select: {
-        id: true,
-      },
-    });
+        const expenseAgent = new ExpenseAgent();
 
-    const itemsData = result.object.items.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      price: item.price,
-      categoryId: categories.find((cat) => cat.name === item.category)!.id,
-      expenseId: expense.id,
-    }));
+        const result = await expenseAgent.receivedMessage(
+          message,
+          categories.map((cat) => cat.name),
+        );
 
-    const items = await this.prisma.items.createMany({
-      data: itemsData,
-    });
+        await evolutionApi.MessageRoute.sendMessage({
+          text: result.object.resumeWhatsapp,
+          number: phone,
+          options: {
+            delay: 5,
+          },
+        });
 
-    return items;
+        const expense = await this.prisma.expense.create({
+          data: {
+            userId: user.id,
+            priceTotal: result.object.priceTotal,
+            paymentMethod: result.object.paymentMethod,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        const itemsData = result.object.items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          categoryId: categories.find((cat) => cat.name === item.category)!.id,
+          expenseId: expense.id,
+        }));
+
+        const items = await this.prisma.items.createMany({
+          data: itemsData,
+        });
+
+        break;
+      }
+      case 'consultation': {
+        console.log('consulta');
+        break;
+      }
+    }
+
+    return type;
   }
 }
